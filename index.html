@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>parabains</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="./img/danicreu.png">
+    <style>
+        div {
+            height: 200px;
+            width: 200px;
+            position: absolute;
+        }
+
+        .azul {
+            left: 0;
+            background-image: url("./img/danielfinal.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+            position: absolute;
+        }
+
+        .vermelho {
+            right: 0;
+            bottom: 0;
+            display: hidden;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+        }
+
+        .overlay {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            position: absolute;
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 1);
+            /* -webkit-text-stroke: 5px black; */
+            /* -webkit-text-fill-color: transparent; */
+            text-shadow: 1px 2px 0px #000;
+            text-align: center;
+            display: none;
+            transition: display 1s ease-in-out;
+        }
+
+        .botao-play {
+            position: absolute;
+            z-index: 999;
+            bottom: 1em;
+            right: 1em;
+            background-color: #fff;
+            border-radius: 100%;
+            width: 5em;
+            height: 5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid black;
+        }
+
+        .botao-play img {
+            width: 70%;
+            height: 70%;
+            max-width: 70%;
+            max-height: 70%;
+        }
+
+        #fechar {
+            position: absolute;
+            right: 1em;
+            top: 1em;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: white;
+        }
+
+        @media screen and (min-width: 1024px) {
+            h1 {
+                font-size: 5em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <audio preload onplay="sendText()" id="audio">
+        <source src="./songs/dont-worry-be-happy.mp3" type="audio/mpeg">
+        Your browser does not support the audio tag.
+    </audio>
+    <button class="botao-play" id="botao-play" onclick="tocarMusica()"><img src="./img/icon/play.png" alt="ícone play"
+            id="img-botao"></button>
+    <div class="azul" id="azul"></div>
+    <div class="vermelho" id="vermelho"></div>
+    <div class="overlay" id="overlay">
+        <a id="fechar" onclick="closeOverlay();">X</a>
+        <h1 id="titulo">
+            FELIZ DANIVERSÁRIO!
+        </h1>
+    </div>
+    <script>
+        var screenWidth = window.screen.width;
+        var screenHeight = window.screen.height;
+        size = getRandomNumber(Math.min(screenWidth, screenHeight) / 10, Math.min(screenWidth, screenHeight));
+        document.getElementById("azul").style.height = size + "px";
+        document.getElementById("azul").style.width = size + "px";
+        document.getElementById("vermelho").style.height = size + "px";
+        document.getElementById("vermelho").style.width = size + "px";
+        function updateObjects() {
+            elemAzul = document.getElementsByClassName("azul")[0]
+            coordAzul = {
+                x: elemAzul.offsetLeft, y: elemAzul.offsetTop,
+                centro: {
+                    x: elemAzul.offsetLeft + (elemAzul.offsetWidth / 2),
+                    y: elemAzul.offsetTop + (elemAzul.offsetHeight / 2)
+                }
+            }
+
+            elemVermelho = document.getElementsByClassName("vermelho")[0]
+            coordVermelho = {
+                x: elemVermelho.offsetLeft, y: elemVermelho.offsetTop,
+                centro: {
+                    x: elemVermelho.offsetLeft + (elemVermelho.offsetWidth / 2),
+                    y: elemVermelho.offsetTop + (elemVermelho.offsetHeight / 2)
+                }
+            }
+        }
+
+        updateObjects();
+
+        initialX = -1 * (elemAzul.offsetWidth);
+        initialY = getRandomNumber(0, window.screen.height - elemAzul.offsetHeight);
+        elemAzul.style.left = "0px";
+        elemAzul.style.top = initialY + "px";
+
+
+        function getCoeficients(point1, point2) {
+            // console.log("point1: " + JSON.stringify(point1));
+            // console.log("point2: " + JSON.stringify(point2));
+            const slope = (point2.y - point1.y) / (point2.x - point1.x);
+            // console.log("slope: " + slope)
+            const intercept = point1.y - slope * point1.x;
+            // console.log("intercept: " + intercept)
+            return { slope: slope, intercept: intercept };
+        }
+
+        //dada a equação da reta entre x e y, calcula a posição de y dada uma posição X
+        function calculate(x) {
+            coeficients = getCoeficients(coordAzul, coordVermelho)
+            // console.log("coeficients: " + JSON.stringify(coeficients));
+            // console.log("coordAzul: " + JSON.stringify(coordAzul));
+            // console.log("coordVermelho: " + JSON.stringify(coordVermelho));
+            y = coeficients.slope * x + coeficients.intercept
+            return y;
+        }
+
+        function setGoal() {
+            elemVermelho.style.bottom = elemAzul.offsetTop + "px";
+            elemVermelho.style.right = elemAzul.offsetLeft + "px";
+            updateObjects();
+        }
+        setGoal();
+
+
+
+
+
+        function moveDiv() {
+            console.log("movendo");
+            speed = 1;
+            // console.log("passando o x de azul para: " + (elemAzul.offsetLeft + speed) + "px")
+            // console.log("passando o y de azul para: " + calculate(elemAzul.offsetLeft + speed) + "px")
+            elemAzul.style.left = (elemAzul.offsetLeft + speed) + "px"
+            elemAzul.style.top = calculate(elemAzul.offsetLeft + speed) + "px"
+            if (isDivOutside(elemAzul)) {
+                resetPosition();
+            }
+        }
+
+        setInterval(moveDiv, 20);
+
+        function isDivOutside(div) {
+            // Get the div's bounding rectangle
+            const rect = div.getBoundingClientRect();
+
+            // Check if the div is completely outside the viewport
+            const isOutsideViewport =
+                rect.bottom < 0 ||
+                rect.top > window.innerHeight ||
+                rect.right < 0 ||
+                rect.left > window.innerWidth;
+
+            // Return the result
+            return isOutsideViewport;
+        }
+
+        function resetPosition() {
+            elemAzul.style.left = initialX + "px";
+            elemAzul.style.top = initialY + "px";
+            updateObjects();
+        }
+
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+    </script>
+    <script>
+        danielDiv = elemAzul;
+        initialRotation = getRandomNumber(0, 360);
+        danielDiv.style.transform = "rotate(" + initialRotation + "deg)";
+
+        rotation = initialRotation;
+        function spinDani() {
+            rotation += .1;
+            danielDiv.style.transform = "rotate(" + rotation + "deg)";
+            window.requestAnimationFrame(spinDani)
+        };
+        spinDani();
+
+        function showDivWithDelay(delay) {
+            const div = document.getElementById('overlay');
+
+            setTimeout(() => {
+                div.style.opacity = 1;
+                document.getElementById("titulo").style.display = "block"
+            }, delay);
+        }
+
+        function tocarMusica() {
+            elemAudio = document.getElementById("audio");
+            if (elemAudio.paused) {
+                elemAudio.play();
+                document.getElementById("img-botao").src = "./img/icon/pause.png"
+                sendText();
+            } else {
+                elemAudio.pause();
+                document.getElementById("img-botao").src = "./img/icon/play.png"
+                // hiding the overlay
+                closeOverlay();
+            }
+        }
+
+
+        function sendText() {
+            showDivWithDelay(3000);
+        }
+
+        function setRandomBackground() {
+            imgNumber = getRandomNumber(1, 14)
+            document.body.style.backgroundImage = `url(./img/background/${imgNumber}.png)`
+        }
+        setRandomBackground();
+
+        function closeOverlay() {
+            document.getElementById('overlay').style.opacity = 0
+            document.getElementById("titulo").style.display = "none"
+        }
+    </script>
+</body>
+
+</html>
